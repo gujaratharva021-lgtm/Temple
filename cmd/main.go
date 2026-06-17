@@ -19,40 +19,28 @@ import (
 )
 
 func main() {
-	// Load config
 	cfg := config.Load()
 
-	// Init DB connections
 	db := database.InitPostgres(cfg)
-	rdb := database.InitRedis(cfg)
-	mdb := database.InitMongo(cfg)
-
-	// Auto migrate models
 	database.AutoMigrate(db)
 
-	// Setup Gin router
 	r := gin.Default()
 
-	// Global middleware
 	r.Use(middleware.CORS())
-	r.Use(middleware.RateLimiter(rdb))
 	r.Use(middleware.RequestLogger())
 
-	// API v1 group
 	api := r.Group("/api/v1")
 
-	// Register all module routes
-	auth.RegisterRoutes(api, db, rdb, cfg)
-	user.RegisterRoutes(api, db, rdb, cfg)
-	temple.RegisterRoutes(api, db, mdb, cfg)
+	auth.RegisterRoutes(api, db, nil, cfg)
+	user.RegisterRoutes(api, db, nil, cfg)
+	temple.RegisterRoutes(api, db, nil, cfg)
 	pooja.RegisterRoutes(api, db, cfg)
 	astrology.RegisterRoutes(api, db, cfg)
-	wallet.RegisterRoutes(api, db, rdb, cfg)
+	wallet.RegisterRoutes(api, db, nil, cfg)
 	store.RegisterRoutes(api, db, cfg)
 	notification.RegisterRoutes(api, db, cfg)
 	sadhana.RegisterRoutes(api, db, cfg)
 
-	// Health check
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "ok", "service": "One Bharat Backend"})
 	})

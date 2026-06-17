@@ -1,15 +1,12 @@
 package middleware
 
 import (
-	"context"
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/redis/go-redis/v9"
 )
 
 // ─── CORS ────────────────────────────────────────────────────────────────────
@@ -21,28 +18,6 @@ func CORS() gin.HandlerFunc {
 		c.Header("Access-Control-Allow-Headers", "Origin,Content-Type,Accept,Authorization")
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(204)
-			return
-		}
-		c.Next()
-	}
-}
-
-// ─── RATE LIMITER ────────────────────────────────────────────────────────────
-
-func RateLimiter(rdb *redis.Client) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		ip := c.ClientIP()
-		key := fmt.Sprintf("rate:%s", ip)
-		ctx := context.Background()
-
-		count, _ := rdb.Incr(ctx, key).Result()
-		if count == 1 {
-			rdb.Expire(ctx, key, time.Minute)
-		}
-
-		if count > 100 {
-			c.JSON(http.StatusTooManyRequests, gin.H{"error": "Too many requests"})
-			c.Abort()
 			return
 		}
 		c.Next()
@@ -105,7 +80,6 @@ func RoleRequired(roles ...string) gin.HandlerFunc {
 	}
 }
 
-// GenerateToken creates JWT token
 func GenerateToken(userID, role, secret string, expiryHours int) (string, error) {
 	claims := Claims{
 		UserID: userID,
