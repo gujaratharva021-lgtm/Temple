@@ -71,19 +71,19 @@ func (h *Handler) GetFestivals(c *gin.Context) {
 	var festivals []models.Festival
 	now := time.Now()
 
-	if err := h.db.Where("festival_date >= ? AND festival_date <= ?",
-		now, now.AddDate(0, 0, 60)).
-		Order("festival_date asc").Find(&festivals).Error; err != nil {
+	if err := h.db.Where("festival_date >= ?", now).
+		Order("festival_date asc").Limit(20).Find(&festivals).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch festivals"})
 		return
 	}
 
 	if len(festivals) == 0 {
+		h.db.Where("festival_date < ?", now).Delete(&models.Festival{})
 		if h.cfg.AstrologyAPIKey != "" {
 			festivals = fetchFestivalsFromAPI(h.cfg)
 		}
 		if len(festivals) == 0 {
-			festivals = seedFestivals()
+			festivals = seedFestivalsFromNow()
 		}
 		h.db.Create(&festivals)
 	}
@@ -369,4 +369,22 @@ func fetchFestivalsFromAPI(cfg *config.Config) []models.Festival {
 	}
 
 	return festivals
+}
+
+func seedFestivalsFromNow() []models.Festival {
+	now := time.Now()
+	return []models.Festival{
+		{Name: "Pradosh Vrat", NameHi: "प्रदोष व्रत", Icon: "🕉️",
+			FestivalDate: now.AddDate(0, 0, 2)},
+		{Name: "Purnima", NameHi: "पूर्णिमा", Icon: "🌕",
+			FestivalDate: now.AddDate(0, 0, 5)},
+		{Name: "Guru Purnima", NameHi: "गुरु पूर्णिमा", Icon: "🙏",
+			FestivalDate: now.AddDate(0, 0, 23)},
+		{Name: "Nag Panchami", NameHi: "नाग पंचमी", Icon: "🐍",
+			FestivalDate: now.AddDate(0, 0, 45)},
+		{Name: "Raksha Bandhan", NameHi: "रक्षा बंधन", Icon: "🎗️",
+			FestivalDate: now.AddDate(0, 0, 53)},
+		{Name: "Janmashtami", NameHi: "जन्माष्टमी", Icon: "🦚",
+			FestivalDate: now.AddDate(0, 0, 60)},
+	}
 }
