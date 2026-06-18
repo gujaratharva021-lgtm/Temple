@@ -605,6 +605,56 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   // ─── SHLOKA ─────────────────────────────────────────────────
   Widget _buildShloka(bool isHindi) {
+    final shlokas = [
+      {
+        'shloka':
+            'कर्मण्येवाधिकारस्ते मा फलेषु कदाचन।\nमा कर्मफलहेतुर्भूर्मा ते सङ्गोऽस्त्वकर्मणि॥',
+        'meaning':
+            'Do your duty without attachment to results.\nThis is the essence of the Gita.',
+        'source': '— Bhagavad Gita 2.47',
+      },
+      {
+        'shloka':
+            'यदा यदा हि धर्मस्य ग्लानिर्भवति भारत।\nअभ्युत्थानमधर्मस्य तदात्मानं सृजाम्यहम्॥',
+        'meaning':
+            'Whenever righteousness declines, I manifest myself.\nTo protect the good and destroy evil.',
+        'source': '— Bhagavad Gita 4.7',
+      },
+      {
+        'shloka':
+            'सर्वधर्मान्परित्यज्य मामेकं शरणं व्रज।\nअहं त्वां सर्वपापेभ्यो मोक्षयिष्यामि मा शुचः॥',
+        'meaning':
+            'Abandon all duties and surrender unto me alone.\nI shall liberate you from all sins, do not grieve.',
+        'source': '— Bhagavad Gita 18.66',
+      },
+      {
+        'shloka': 'वासांसि जीर्णानि यथा विहाय\nनवानि गृह्णाति नरोऽपराणि।',
+        'meaning':
+            'Just as a person puts on new garments,\ngiving up old ones, the soul accepts new bodies.',
+        'source': '— Bhagavad Gita 2.22',
+      },
+      {
+        'shloka': 'नायमात्मा बलहीनेन लभ्यो\nन च प्रमादात् तपसो वाप्यलिङ्गात्।',
+        'meaning':
+            'The Self cannot be attained by the weak,\nnor by the careless, nor by wrong austerity.',
+        'source': '— Mundaka Upanishad',
+      },
+      {
+        'shloka': 'अहिंसा परमो धर्मः\nधर्म हिंसा तथैव च।',
+        'meaning':
+            'Non-violence is the highest virtue,\nso too is violence in service of righteousness.',
+        'source': '— Mahabharata',
+      },
+      {
+        'shloka': 'सत्यमेव जयते नानृतं\nसत्येन पन्था विततो देवयानः।',
+        'meaning':
+            'Truth alone triumphs, not falsehood.\nThrough truth the divine path is spread out.',
+        'source': '— Mundaka Upanishad 3.1.6',
+      },
+    ];
+    final today = DateTime.now();
+    final index = (today.year + today.month + today.day) % shlokas.length;
+    final shloka = shlokas[index];
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       padding: const EdgeInsets.all(18),
@@ -621,7 +671,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       ),
       child: Column(children: [
         Row(children: [
-          const Text('📜', style: TextStyle(fontSize: 20)),
           const SizedBox(width: 8),
           Text(isHindi ? 'आज का श्लोक' : "Today's Shloka",
               style: TextStyle(
@@ -631,19 +680,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         ]),
         const SizedBox(height: 12),
         Text(
-          isHindi
-              ? 'कर्म कर, फल की चिंता मत कर।\nयही गीता का सार है।'
-              : 'Do your duty, do not worry about the result.\nThis is the essence of the Gita.',
+          isHindi ? shloka['shloka']! : shloka['meaning']!,
           textAlign: TextAlign.center,
           style: const TextStyle(
               fontSize: 15, height: 1.6, color: Color(0xFF1A0A00)),
         ),
         const SizedBox(height: 8),
-        Text('— Bhagavad Gita',
-            style: TextStyle(
-                fontSize: 12,
-                color: Colors.orange.shade600,
-                fontStyle: FontStyle.italic)),
+        Text(
+          isHindi ? shloka['meaning']! : shloka['source']!,
+          textAlign: TextAlign.center,
+          style:
+              TextStyle(fontSize: 12, color: Colors.grey.shade600, height: 1.5),
+        ),
+        const SizedBox(height: 6),
+        if (isHindi)
+          Text(shloka['source']!,
+              style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.orange.shade600,
+                  fontStyle: FontStyle.italic)),
       ]),
     );
   }

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
@@ -12,184 +12,235 @@ class LanguageScreen extends ConsumerStatefulWidget {
 }
 
 class _LanguageScreenState extends ConsumerState<LanguageScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   String? _selected;
   late AnimationController _controller;
+  late AnimationController _rippleController;
   late Animation<double> _fadeIn;
   late Animation<double> _slideUp;
+  late Animation<double> _ripple;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 600))
+        vsync: this, duration: const Duration(milliseconds: 800))
       ..forward();
-    _fadeIn = Tween<double>(begin: 0, end: 1)
-        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
-    _slideUp = Tween<double>(begin: 30, end: 0)
-        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+    _rippleController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 1500))
+      ..repeat(reverse: true);
+    _fadeIn = Tween<double>(begin: 0, end: 1).animate(
+        CurvedAnimation(parent: _controller, curve: Curves.easeIn));
+    _slideUp = Tween<double>(begin: 40, end: 0).animate(
+        CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+    _ripple = Tween<double>(begin: 0.85, end: 1.15).animate(
+        CurvedAnimation(parent: _rippleController, curve: Curves.easeInOut));
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _rippleController.dispose();
     super.dispose();
   }
 
   Future<void> _selectLanguage(String lang) async {
     setState(() => _selected = lang);
-    await Future.delayed(const Duration(milliseconds: 250));
+    await Future.delayed(const Duration(milliseconds: 300));
     const storage = FlutterSecureStorage();
     await storage.write(key: 'app_language', value: lang);
     ref.read(localeProvider.notifier).setLocale(lang);
     ref.read(languageProvider.notifier).set(lang);
-    print('LANGUAGE SET TO: $lang');
-    print('LANGUAGE SET TO: $lang');
-    print('CURRENT PROVIDER VALUE: ${ref.read(languageProvider)}');
     if (mounted) context.go('/home');
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: AnimatedBuilder(
-          animation: _controller,
-          builder: (_, __) => Opacity(
-            opacity: _fadeIn.value,
-            child: Transform.translate(
-              offset: Offset(0, _slideUp.value),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 28),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 84,
-                      height: 84,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(22),
-                        gradient: const LinearGradient(
-                            colors: [Color(0xFFFFD700), Color(0xFFFF8C00)]),
-                        boxShadow: [
-                          BoxShadow(
-                              color: Colors.orange.withOpacity(0.25),
-                              blurRadius: 20,
-                              spreadRadius: 2)
-                        ],
-                      ),
-                      child: const Center(
-                          child: Text('🕉️', style: TextStyle(fontSize: 42))),
-                    ),
-                    const SizedBox(height: 28),
-                    const Text('भाषा चुनें',
-                        style: TextStyle(
-                            color: Color(0xFF2D2D2D),
-                            fontSize: 26,
-                            fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 4),
-                    Text('Choose Language',
-                        style: TextStyle(
-                            color: Colors.grey.shade500, fontSize: 15)),
-                    const SizedBox(height: 44),
-                    _LanguageCard(
-                        emoji: '🇮🇳',
-                        language: 'हिंदी',
-                        subtitle: 'Hindi',
-                        isSelected: _selected == 'hi',
-                        onTap: () => _selectLanguage('hi')),
-                    const SizedBox(height: 14),
-                    _LanguageCard(
-                        emoji: '🇬🇧',
-                        language: 'English',
-                        subtitle: 'अंग्रेज़ी',
-                        isSelected: _selected == 'en',
-                        onTap: () => _selectLanguage('en')),
-                    const SizedBox(height: 44),
-                    Text('एक भारत, श्रेष्ठ भारत',
-                        style: TextStyle(
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Image.asset('assets/images/language_bg.png', fit: BoxFit.cover),
+          ),
+          Positioned.fill(
+            child: Container(color: Colors.white.withOpacity(0.82)),
+          ),
+          SafeArea(
+            child: AnimatedBuilder(
+              animation: _controller,
+              builder: (_, __) => Opacity(
+                opacity: _fadeIn.value,
+                child: Transform.translate(
+                  offset: Offset(0, _slideUp.value),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Spacer(flex: 2),
+                        AnimatedBuilder(
+                          animation: _rippleController,
+                          builder: (_, __) => Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              Container(
+                                width: 90 * _ripple.value,
+                                height: 90 * _ripple.value,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.orange.withOpacity(0.12),
+                                ),
+                              ),
+                              Container(
+                                width: 70,
+                                height: 70,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: const LinearGradient(
+                                    colors: [Color(0xFFFF8C00), Color(0xFFFFD700)],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.orange.withOpacity(0.4),
+                                      blurRadius: 20,
+                                      spreadRadius: 2,
+                                    )
+                                  ],
+                                ),
+                                child: ClipOval(
+                                  child: Image.asset(
+                                    'assets/images/temple_logo.png',
+                                    width: 70,
+                                    height: 70,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+                        Text(
+                          'Select your language',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                        const SizedBox(height: 40),
+                        _LangCard(
+                          label: 'हिंदी',
+                          sublabel: 'Hindi',
+                          isSelected: _selected == 'hi',
+                          onTap: () => _selectLanguage('hi'),
+                        ),
+                        const SizedBox(height: 12),
+                        _LangCard(
+                          label: 'English',
+                          sublabel: 'अंग्रेज़ी',
+                          isSelected: _selected == 'en',
+                          onTap: () => _selectLanguage('en'),
+                        ),
+                        const Spacer(flex: 2),
+                        Text(
+                          'एक भारत, श्रेष्ठ भारत',
+                          style: TextStyle(
+                            fontSize: 11,
                             color: Colors.orange.shade400,
-                            fontSize: 12,
-                            letterSpacing: 1.5)),
-                  ],
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
 }
 
-class _LanguageCard extends StatelessWidget {
-  final String emoji, language, subtitle;
+class _LangCard extends StatelessWidget {
+  final String label, sublabel;
   final bool isSelected;
   final VoidCallback onTap;
-  const _LanguageCard(
-      {required this.emoji,
-      required this.language,
-      required this.subtitle,
-      required this.isSelected,
-      required this.onTap});
+
+  const _LangCard({
+    required this.label,
+    required this.sublabel,
+    required this.isSelected,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 18),
+        duration: const Duration(milliseconds: 250),
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.orange.shade50 : Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          color: isSelected
+              ? Colors.orange.withOpacity(0.15)
+              : Colors.white.withOpacity(0.9),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
-              color: isSelected ? Colors.orange : Colors.grey.shade300,
-              width: isSelected ? 2 : 1.2),
+            color: isSelected ? Colors.orange : Colors.grey.shade300,
+            width: isSelected ? 2 : 1.2,
+          ),
           boxShadow: [
             BoxShadow(
-                color: Colors.black.withOpacity(0.04),
-                blurRadius: 8,
-                offset: const Offset(0, 2))
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
           ],
         ),
         child: Row(
           children: [
-            Text(emoji, style: const TextStyle(fontSize: 32)),
-            const SizedBox(width: 18),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(language,
+                  Text(label,
                       style: TextStyle(
-                          color: isSelected
-                              ? Colors.orange.shade800
-                              : const Color(0xFF2D2D2D),
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold)),
-                  Text(subtitle,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: isSelected
+                            ? Colors.orange.shade800
+                            : const Color(0xFF1A1A1A),
+                      )),
+                  Text(sublabel,
                       style: TextStyle(
-                          color: isSelected
-                              ? Colors.orange.shade400
-                              : Colors.grey.shade500,
-                          fontSize: 13)),
+                        fontSize: 12,
+                        color: isSelected
+                            ? Colors.orange.shade400
+                            : Colors.grey.shade500,
+                      )),
                 ],
               ),
             ),
             AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              width: 26,
-              height: 26,
+              duration: const Duration(milliseconds: 250),
+              width: 24,
+              height: 24,
               decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: isSelected ? Colors.orange : Colors.transparent,
-                  border: Border.all(
-                      color: isSelected ? Colors.orange : Colors.grey.shade400,
-                      width: 2)),
+                shape: BoxShape.circle,
+                color: isSelected ? Colors.orange : Colors.transparent,
+                border: Border.all(
+                  color: isSelected ? Colors.orange : Colors.grey.shade300,
+                  width: 2,
+                ),
+              ),
               child: isSelected
-                  ? const Icon(Icons.check, color: Colors.white, size: 15)
+                  ? const Icon(Icons.check, color: Colors.white, size: 14)
                   : null,
             ),
           ],
